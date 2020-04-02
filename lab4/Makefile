@@ -1,2 +1,2 @@
 all:
-		gcc lab4.c -o lab4.out
+	gcc lab4.c -o lab4.out
