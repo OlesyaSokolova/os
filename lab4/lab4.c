@@ -12,9 +12,10 @@ node * init(char * newString)
 {
     node * newNode;
     newNode = (node*)malloc(sizeof(node));
-    int newStringLength = strlen(newString);
-    newNode->data = (char*)malloc(sizeof(char)*newStringLength);
-    strcpy(newNode->data, newString);
+    //int newStringLength = strlen(newString);
+    newNode->data = strdup(newString);
+    //newNode->data = (char*)malloc(sizeof(char)*newStringLength);
+    //strcpy(newNode->data, newString);
     newNode->next = NULL;
     return(newNode);
 }
