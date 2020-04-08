@@ -5,17 +5,21 @@
 
 typedef struct list_s {
     char *data;
-    struct      list_s* next;
+    struct	list_s* next;
 }node;
 
 node * init(char * newString)
 {
     node * newNode;
     newNode = (node*)malloc(sizeof(node));
-    //int newStringLength = strlen(newString);
     newNode->data = strdup(newString);
-    //newNode->data = (char*)malloc(sizeof(char)*newStringLength);
-    //strcpy(newNode->data, newString);
+
+    if(newNode->data == NULL || newNode == NULL)
+    {
+	    fputs("Unable to allocate memory.\n", stdout);
+	    exit(EXIT_FAILURE);
+    }
+
     newNode->next = NULL;
     return(newNode);
 }
@@ -24,15 +28,18 @@ node * addElement(node * previousNode, char * newString)
 {
     if (previousNode == NULL)
     {
-        previousNode = init(newString);
-        return previousNode;
+	    previousNode = init(newString);
+	    return previousNode;
     }
 
     node* nextNode = (node*)malloc(sizeof(node));
     nextNode->data = strdup(newString);
-    //int newStringLength = strlen(newString);
-    //nextNode->data = (char*)malloc(sizeof(char)*newStringLength);
-    //strcpy(nextNode->data, newString);
+    
+    if(nextNode->data == NULL || nextNode == NULL)
+    {
+	    fputs("Unable to allocate memory.\n", stdout);
+	    exit(EXIT_FAILURE);
+    }
 
     nextNode->next = NULL;
     previousNode->next = nextNode;
@@ -45,7 +52,7 @@ void printList(node *head)
     node *p = head;
     while (p != NULL)
     {
-        fputs(p->data, stdout);
+	    fputs(p->data, stdout);
         p = p->next;
     }
 }
@@ -55,10 +62,10 @@ void freeList(node * head)
     node *p = head, *t = NULL;
     while (p != NULL)
     {
-        t = p;
+	    t = p;
         p = p->next;
-        free(t->data);
-        free(t);
+	    free(t->data);
+	    free(t);
     }
 }
 
@@ -71,16 +78,15 @@ int main()
 
     if (check_fgets == NULL)
     {
-        fputs("Error: cannot get string from stdin", stdout);
-        exit(EXIT_FAILURE);
+	fputs("Error: cannot get string from stdin", stdout);
+	exit(EXIT_FAILURE);
     }
-
+    
     char endInput[BUFSIZ] = ".\n";
     if (strcmp(string, endInput) == 0)
     {
-        fputs("No input strings.\n", stdout);
-
-        exit(EXIT_FAILURE);
+	    fputs("No input strings.\n", stdout);
+	    exit(EXIT_FAILURE);
     }
 
     node * nodePtr = NULL;
@@ -92,20 +98,20 @@ int main()
     if (check_fgets == NULL)
     {
         fputs("Error: cannot get string from stdin.", stdout);
-        freeList(head);
+	    freeList(head);
         exit(EXIT_FAILURE);
     }
-
+    
     while (strcmp(string, endInput) != 0)
     {
-        nodePtr = addElement(nodePtr, string);
-        check_fgets = fgets(string, BUFSIZ, stdin);
-        if (check_fgets == NULL)
-        {
-            fputs("Error: cannot get string from stdin", stdout);
-            freeList(head);
-            exit(EXIT_FAILURE);
-        }
+	    nodePtr = addElement(nodePtr, string);
+	    check_fgets = fgets(string, BUFSIZ, stdin);
+	    if (check_fgets == NULL)
+	    {
+	        fputs("Error: cannot get string from stdin", stdout);
+	        freeList(head);
+	        exit(EXIT_FAILURE);
+	    }
     }
     printList(head);
     freeList(head);
