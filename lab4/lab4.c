@@ -1,21 +1,29 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 typedef struct list_s {
     char *data;
-    struct      list_s* next;
+    struct	list_s* next;
 }node;
 
-node * init(char * newString)
+node * initList(char * newString)
 {
     node * newNode;
     newNode = (node*)malloc(sizeof(node));
-    //int newStringLength = strlen(newString);
     newNode->data = strdup(newString);
-    //newNode->data = (char*)malloc(sizeof(char)*newStringLength);
-    //strcpy(newNode->data, newString);
+    if(newNode == NULL)
+    {
+	return NULL;
+    }
+    newNode->data = strdup(newString);
+    if(newNode == NULL)
+    {
+	free(newNode);
+	return NULL;
+    }
+
     newNode->next = NULL;
     return(newNode);
 }
@@ -24,15 +32,22 @@ node * addElement(node * previousNode, char * newString)
 {
     if (previousNode == NULL)
     {
-        previousNode = init(newString);
-        return previousNode;
+	previousNode = initList(newString);
+	return previousNode;
     }
 
     node* nextNode = (node*)malloc(sizeof(node));
+    
+    if(nextNode == NULL)
+    {
+	return NULL;
+    }
     nextNode->data = strdup(newString);
-    //int newStringLength = strlen(newString);
-    //nextNode->data = (char*)malloc(sizeof(char)*newStringLength);
-    //strcpy(nextNode->data, newString);
+    if(nextNode == NULL)
+    {
+	free(nextNode);
+	return NULL;
+    }
 
     nextNode->next = NULL;
     previousNode->next = nextNode;
@@ -45,8 +60,8 @@ void printList(node *head)
     node *p = head;
     while (p != NULL)
     {
-        fputs(p->data, stdout);
-        p = p->next;
+	fputs(p->data, stdout);
+	p = p->next;
     }
 }
 
@@ -55,10 +70,10 @@ void freeList(node * head)
     node *p = head, *t = NULL;
     while (p != NULL)
     {
-        t = p;
-        p = p->next;
-        free(t->data);
-        free(t);
+	t = p;
+	p = p->next;
+	free(t->data);
+	free(t);
     }
 }
 
@@ -71,41 +86,49 @@ int main()
 
     if (check_fgets == NULL)
     {
-        fputs("Error: cannot get string from stdin", stdout);
-        exit(EXIT_FAILURE);
+	fputs("Error: cannot get string from stdin", stdout);
+	exit(EXIT_FAILURE);
     }
-
+    
     char endInput[BUFSIZ] = ".\n";
     if (strcmp(string, endInput) == 0)
     {
-        fputs("No input strings.\n", stdout);
-
-        exit(EXIT_FAILURE);
+	fputs("No input strings.\n", stdout);
+	exit(EXIT_FAILURE);
     }
 
-    node * nodePtr = NULL;
-    nodePtr = addElement(nodePtr, string);
+    node * nodePtr = initList(string);
+    if(nodePtr == NULL)
+    {
+	perror(strerror(errno));
+	exit(EXIT_FAILURE);
+    }
     node * head = nodePtr;
-
 
     check_fgets = fgets(string, BUFSIZ, stdin);
     if (check_fgets == NULL)
     {
         fputs("Error: cannot get string from stdin.", stdout);
-        freeList(head);
+	freeList(head);
         exit(EXIT_FAILURE);
     }
-
+    
     while (strcmp(string, endInput) != 0)
     {
-        nodePtr = addElement(nodePtr, string);
-        check_fgets = fgets(string, BUFSIZ, stdin);
-        if (check_fgets == NULL)
-        {
-            fputs("Error: cannot get string from stdin", stdout);
-            freeList(head);
-            exit(EXIT_FAILURE);
+	nodePtr = addElement(nodePtr, string);
+	if(nodePtr == NULL)
+	{
+	    perror(strerror(errno));
+	    freeList(head);
+	    exit(EXIT_FAILURE);
         }
+	check_fgets = fgets(string, BUFSIZ, stdin);
+	if (check_fgets == NULL)
+	{
+	    fputs("Error: cannot get string from stdin", stdout);
+	    freeList(head);
+	    exit(EXIT_FAILURE);
+	}
     }
     printList(head);
     freeList(head);
