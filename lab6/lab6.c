@@ -5,6 +5,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <poll.h>
 
 #define MAX_LINES_NUMBER 1024
 #define BUF_SIZE 256
@@ -42,38 +43,46 @@ int createShiftsTable(char* dataBuffer, long fileSize, int*linesLengths,  long* 
 
 int askAndPrintLines(int fileDesc, char * dataBuffer, int linesNumber, int* linesLengths, long* shifts)
 {
-    int lineNumber;
+    int lineNumber = -1;
     int readCheck;
     char readBuffer[BUF_SIZE];
     int readNumber = 0;
-    int fileDesc1;
-    if ((fileDesc1 = open("/dev/tty", O_RDONLY | O_NDELAY)) == -1)
-    {
-        perror("/dev/tty");
-        return -1;
-    }
+    int pollCheck;
+    int writeCheck;
     printf("This program prints lines from file. To exit type -1 as line number.\n");
+    struct pollfd fds;
+    fds.fd = STDIN_FILENO;
+    fds.events = POLLIN;
     for(;;)
     {
         printf("Enter line number (in 5 seconds):\n");
-        sleep(5);
-        readNumber = read(fileDesc1, readBuffer, BUF_SIZE);
-        if(readNumber == -1)
+
+        pollCheck = poll(&fds, 1, WAIT_TIME * 1000);
+        if (pollCheck == -1)
+        {
+            perror("poll");
+            return -1;
+        }
+        if (pollCheck == 0)
         {
             printf("%s", dataBuffer);
             return -1;
         }
+        readCheck = scanf("%d", &lineNumber);
+        if(readCheck == 0)
+        {
+            printf("Bad input. This program works only with numbers!\n");
+            return -1;
+        }
         else
         {
-            readBuffer[readNumber] = '\0';
-            lineNumber = atoi(readBuffer);
             if(lineNumber == -1)
             {
                 return -1;
             }
             if(lineNumber < 0)
             {
-                printf("Line number shouldn't be less than zero.Try again.\n");
+                printf("Line number shouldn't be less than zero.Try again.\n"); 
                 continue;
             }
             if(lineNumber >= linesNumber)
@@ -88,9 +97,14 @@ int askAndPrintLines(int fileDesc, char * dataBuffer, int linesNumber, int* line
         if(readCheck == -1)
         {
             printf("Unable to read this line from file.\n");
-            return -1;
+            continue;
         }
-        write(1, readBuffer, linesLengths[lineNumber]);
+        write(STDOUT, readBuffer, linesLengths[lineNumber]);
+        if(writeCheck == -1)
+        {
+            printf("Unable to write this line! Line number: %d", lineNumber);
+            continue;
+        }
     }
 }
 int main(int argc, char * argv[])
@@ -107,15 +121,31 @@ int main(int argc, char * argv[])
         perror(argv[1]);
         exit(EXIT_FAILURE);
     }
-
+    int checkClose;
     long fileSize = lseek(fileDesc, 0, SEEK_END);
     lseek(fileDesc, 0, SEEK_SET);
 
     char* dataBuffer = (char*)malloc(sizeof(char)*fileSize);
+    if(dataBuffer == NULL)
+    {
+        perror("Unable to allocate memory for reading from file");
+        checkClose  = close(fileDesc);
+        if(checkClose == -1)
+        {
+            perror("Unable to close file");
+            exit(EXIT_FAILURE);
+        }
+    }
     int checkRead = read(fileDesc, dataBuffer, fileSize);
     if(checkRead == -1)
     {
         perror(argv[1]);
+        checkClose  = close(fileDesc);
+        if(checkClose == -1)
+        {
+            perror("Unable to close file");
+            exit(EXIT_FAILURE);
+        }
         exit(EXIT_FAILURE);
     }
     lseek(fileDesc, 0, SEEK_SET);
@@ -125,9 +155,14 @@ int main(int argc, char * argv[])
     int realLinesNumber =  createShiftsTable(dataBuffer, fileSize, linesLengths,  shifts);
     int checkWork  = askAndPrintLines(fileDesc, dataBuffer, realLinesNumber, linesLengths, shifts);
 
-    close(fileDesc);
     free(dataBuffer);
+    checkClose  = close(fileDesc);
 
+    if(checkClose == -1)
+    {
+        perror("Unable to close file");
+        exit(EXIT_FAILURE);
+    }
     if(checkWork == -1);
     {
         exit(EXIT_FAILURE);
