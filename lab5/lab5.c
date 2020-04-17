@@ -10,7 +10,6 @@
 #define MAX_LINE_LENGTH 256
 #define STDOUT 1
 
-
 int createShiftsTable(char* dataBuffer, long fileSize, int*linesLengths,  long* shifts)
 {
     int currentLineLength = 0;
@@ -61,7 +60,7 @@ int askAndPrintLines(int fileDesc, int linesNumber, int* linesLengths, long* shi
         readCheck = scanf("%d", &lineNumber);
         if(readCheck == 0)
         {
-            printf("Bad input. This program works only with numbers!\n");
+            printf("Unable to read line number.\n");
             return -1;
         }
         if(lineNumber == -1)
@@ -84,13 +83,13 @@ int askAndPrintLines(int fileDesc, int linesNumber, int* linesLengths, long* shi
         if(readCheck == -1)
         {
             printf("Unable to read this line from file.\n");
-            continue;
+            return -1;
         }
         writeCheck = write(STDOUT, readBuffer, linesLengths[lineNumber]);
         if(writeCheck == -1)
         {
             printf("Unable to write this line!Line number: %d", lineNumber);
-            continue;
+            return -1;
         }
     }
 }
@@ -98,7 +97,7 @@ int main(int argc, char * argv[])
 {
     if(argc < 2)
     {
-        printf("No input file!\n");
+        printf("Usage: %s file_name\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -127,6 +126,7 @@ int main(int argc, char * argv[])
     int checkRead = read(fileDesc, dataBuffer, fileSize);
     if(checkRead == -1)
     {
+	free(dataBuffer);
         perror(argv[1]);
         checkClose  = close(fileDesc);
         if(checkClose == -1)

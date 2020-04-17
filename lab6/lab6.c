@@ -111,7 +111,7 @@ int main(int argc, char * argv[])
 {
     if(argc < 2)
     {
-        printf("No input file!\n");
+        printf("Usage: %s file_name\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -139,6 +139,7 @@ int main(int argc, char * argv[])
     int checkRead = read(fileDesc, dataBuffer, fileSize);
     if(checkRead == -1)
     {
+	free(dataBuffer);
         perror(argv[1]);
         checkClose  = close(fileDesc);
         if(checkClose == -1)
