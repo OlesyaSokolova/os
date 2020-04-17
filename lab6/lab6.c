@@ -14,14 +14,14 @@
 #define STDIN 0
 #define STDOUT 1
 
-int createShiftsTable(char* dataBuffer, long fileSize, int*linesLengths,  long* shifts)
+int createShiftsTable(char* dataBuffer, off_t fileSize, int*linesLengths,  long* shifts)
 {
     int currentLineLength = 0;
     int currentShift = currentLineLength;
     int lineNumber  = 0;
     shifts[lineNumber] = currentShift;
 
-    long i;
+    off_t i;
     for(i = 0; i < fileSize; i++)
     {
     if(dataBuffer[i] == '\n')
@@ -72,7 +72,15 @@ int askAndPrintLines(int fileDesc, char * dataBuffer, int linesNumber, int* line
         if(readCheck == 0)
         {
             printf("Bad input. This program works only with numbers!\n");
-            return -1;
+            if(errno == EINTR)
+            {
+                printf("Try again.\n");
+                continue;
+            }
+            else
+            {
+                return -1;
+            }
         }
         else
         {
@@ -82,7 +90,7 @@ int askAndPrintLines(int fileDesc, char * dataBuffer, int linesNumber, int* line
             }
             if(lineNumber < 0)
             {
-                printf("Line number shouldn't be less than zero.Try again.\n"); 
+                printf("Line number shouldn't be less than zero.Try again.\n");
                 continue;
             }
             if(lineNumber >= linesNumber)
@@ -122,7 +130,7 @@ int main(int argc, char * argv[])
         exit(EXIT_FAILURE);
     }
     int checkClose;
-    long fileSize = lseek(fileDesc, 0, SEEK_END);
+    off_t fileSize = lseek(fileDesc, 0, SEEK_END);
     lseek(fileDesc, 0, SEEK_SET);
 
     char* dataBuffer = (char*)malloc(sizeof(char)*fileSize);
@@ -139,7 +147,7 @@ int main(int argc, char * argv[])
     int checkRead = read(fileDesc, dataBuffer, fileSize);
     if(checkRead == -1)
     {
-	free(dataBuffer);
+    free(dataBuffer);
         perror(argv[1]);
         checkClose  = close(fileDesc);
         if(checkClose == -1)
