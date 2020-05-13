@@ -92,6 +92,11 @@ int askAndPrintLines(int fileDesc, int linesNumber, int* linesLengths, long* shi
         if(readCheck == -1)
         {
             printf("Unable to read this line from file.\n");
+             if(errno == EINTR)
+            {
+                printf("Try again.\n");
+                continue;
+            }
             continue;
         }
         writeCheck = write(STDOUT, readBuffer, linesLengths[lineNumber]);
