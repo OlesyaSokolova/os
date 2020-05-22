@@ -27,6 +27,7 @@ int main(int argc, char**argv)
     pid = fork();
     if(pid > 0)
     {
+        close(fd[0]);
         int i;
         for(i = 0; i < LINES_NUMBER;i++)
         {
