@@ -23,22 +23,43 @@ int main(int argc, char**argv)
         perror(argv[0]);
         exit(EXIT_FAILURE);
     }
-
+    int checkClose;
     pid = fork();
     if(pid > 0)
     {
+        checkClose = close(fd[0]);
+        if(checkClose == -1)
+        {
+            perror("Unable to close #0 file descriptor");
+            exit(EXIT_FAILURE);
+        }
         int i;
         for(i = 0; i < LINES_NUMBER;i++)
         {
             write(fd[1], text[i], strlen(text[i]));
         }
-     close(fd[1]);
+     checkClose = close(fd[1]);
+     if(checkClose == -1)
+     {
+	perror("Unable to close #1 file descriptor (parent proc)");
+        exit(EXIT_FAILURE);
+     }
      }
 
     else if(pid == 0)
     {
         int readRes = 0;
-        close(fd[1]);
+        checkClose = close(fd[1]);
+	if(checkClose == -1)
+        {
+	    perror("Unable to close #1 file descriptor (child proc)");
+	    checkClose = close(fd[0]);
+	    if(checkClose == -1)
+    	    {
+	        perror("Unable to close #0 file descriptor (child proc)");
+    	    }
+    	    exit(EXIT_FAILURE);
+        }
         char input[SYMBOLS_TO_READ ];
         printf("\ntext before:\n");
         int i;
@@ -58,7 +79,12 @@ int main(int argc, char**argv)
             }
             write(STDOUT, input, readRes);
         }
-        close(fd[0]);
+        checkClose = close(fd[0]);
+	if(checkClose == -1)
+        {
+	    perror("Unable to close #0 file descriptor (child proc)");
+    	    exit(EXIT_FAILURE);
+        }
     }
     else
     {
