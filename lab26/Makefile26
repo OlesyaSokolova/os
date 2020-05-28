@@ -1,0 +1,2 @@
+all:
+		gcc lab26.c -o lab26.out
